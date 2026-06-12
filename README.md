@@ -54,7 +54,7 @@ curl http://localhost:3000/health
 
 ---
 
-## Setup dengan Docker Compose (Direkomendasikan)
+## Setup dengan Docker Compose 
 
 ```bash
 # 1. Copy dan isi semua .env
@@ -162,9 +162,9 @@ smart-crowd-control/
 
 | Anggota | Tugas |
 |---------|-------|
-| A1 | API Gateway, Arsitektur, Postman Collection |
-| A2 | OAuth 2.0, JWT, Auth Server |
-| A3 | PHP MVC Services (Crowd + Incident) |
-| A4 | Python ML Service (3 model) |
-| A5 | IoT Layer (MQTT + Node-RED + RabbitMQ) |
-| A6 | Docker, Kubernetes, Monitoring |
+| Hendry | API Gateway, Arsitektur, Postman Collection |
+| Rafi | OAuth 2.0, JWT, Auth Server |
+| Oman | PHP MVC Services (Crowd + Incident) |
+| Natan | Python ML Service (3 model) |
+| Seli | IoT Layer (MQTT + Node-RED + RabbitMQ) |
+| Sean | Docker, Kubernetes, Monitoring |
