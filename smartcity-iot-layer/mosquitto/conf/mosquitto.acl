@@ -1,0 +1,8 @@
+user iot_device
+topic write city/+/crowd
+topic write city/+/security
+topic write city/+/environment
+
+user admin
+topic read city/#
+topic write city/#
