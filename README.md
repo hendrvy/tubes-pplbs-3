@@ -1,8 +1,11 @@
 ## Cara Menjalankan
 
 cd smartcity-iot-layer
+
 docker compose up -d
+
 pip install -r requirements.txt
+
 python simulator/simulator.py
 
 ## Lakukan tes Subcribe dan publish
