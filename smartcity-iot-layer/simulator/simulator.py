@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 import paho.mqtt.client as mqtt
 
+
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_USERNAME = os.getenv("MQTT_USERNAME", "iot_device")
@@ -47,22 +48,55 @@ def alert_level(incident_flag, officer_count):
         return "medium"
     return "low"
 
+
+def event_profile(tick, zone):
+    concert_spike = tick % 20 in (6, 7, 8) and zone in ("zone1", "zone2")
+    demo_spike = tick % 30 in (14, 15) and zone == "zone3"
+    anomaly = tick % 25 == 0 and zone == "zone4"
+    return concert_spike, demo_spike, anomaly
+
+
 def build_payloads(zone, tick):
+    concert_spike, demo_spike, anomaly = event_profile(tick, zone)
     base_density = random.randint(80, 420)
-    
+    if concert_spike:
+        base_density += random.randint(450, 850)
+    if demo_spike:
+        base_density += random.randint(550, 950)
+    if anomaly:
+        base_density = random.choice((0, 1400, 1800))
 
     speed = round(random.uniform(0.2, 2.4), 2)
-    
+    if concert_spike or demo_spike:
+        speed = round(random.uniform(2.5, 5.6), 2)
+    if anomaly:
+        speed = random.choice((-1.0, 0.0, 12.5))
 
-    incident_flag = random.random() < (0.35)
+    incident_flag = random.random() < (0.35 if demo_spike else 0.08)
     officer_count = random.randint(2, 12)
-    
+    if anomaly:
+        officer_count = random.choice((0, 99))
+
     temperature = round(random.uniform(25.0, 34.5), 1)
     humidity = round(random.uniform(55.0, 88.0), 1)
     visibility = round(random.uniform(2.5, 10.0), 1)
+    if anomaly:
+        temperature = random.choice((-15.0, 62.0))
+        humidity = random.choice((0.0, 120.0))
+        visibility = random.choice((-1.0, 0.1))
+
+    event_type = None
+    if concert_spike:
+        event_type = "concert"
+    elif demo_spike:
+        event_type = "demo"
+    elif anomaly:
+        event_type = "anomaly_test"
+
     common = {
         "zone": zone,
         "timestamp": now_iso(),
+        "event_type": event_type,
         "simulator": "city-iot-simulator",
     }
     if SIMULATOR_RUN_ID:
