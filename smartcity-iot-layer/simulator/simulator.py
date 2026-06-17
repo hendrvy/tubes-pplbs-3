@@ -13,6 +13,29 @@ SIMULATOR_RUN_ID = os.getenv("SIMULATOR_RUN_ID")
 ZONES = ("zone1", "zone2", "zone3", "zone4")
 
 running = True
+def now_iso():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def risk_level(density_count):
+    if density_count >= 900:
+        return "critical"
+    if density_count >= 650:
+        return "high"
+    if density_count >= 350:
+        return "medium"
+    return "low"
+
+
+def alert_level(incident_flag, officer_count):
+    if incident_flag and officer_count < 4:
+        return "critical"
+    if incident_flag:
+        return "high"
+    if officer_count < 3:
+        return "medium"
+    return "low"
+
 def main():
     signal.signal(signal.SIGINT, stop)
     signal.signal(signal.SIGTERM, stop)
