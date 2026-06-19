@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: smartcity-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: smartcity
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+    networks:
+      - smartcity-network
+
+  express-gateway:
+    build: ./express-gateway
+    container_name: express-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      JWT_SECRET: smartcity-secret-key-change-in-production
+    depends_on:
+      oauth-server:
+        condition: service_healthy
+      php-citizen:
+        condition: service_healthy
+      php-traffic:
+        condition: service_healthy
+      php-environment:
+        condition: service_healthy
+      python-ml-service:
+        condition: service_healthy
+    networks:
+      - smartcity-network
+
+  oauth-server:
+    build: ./oauth-server
+    container_name: oauth-server
+    ports:
+      - "3002:3002"
+    environment:
+      JWT_SECRET: smartcity-secret-key-change-in-production
+    networks:
+      - smartcity-network
+
+  php-citizen:
+    build: ./php-citizen
+    container_name: php-citizen
+    environment:
+      DB_HOST: mysql
+      DB_NAME: citizen_db
+      DB_USER: root
+      DB_PASSWORD: password
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - smartcity-network
+
+  php-traffic:
+    build: ./php-traffic
+    container_name: php-traffic
+    environment:
+      DB_HOST: mysql
+      DB_NAME: traffic_db
+      DB_USER: root
+      DB_PASSWORD: password
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - smartcity-network
+
+  php-environment:
+    build: ./php-environment
+    container_name: php-environment
+    environment:
+      DB_HOST: mysql
+      DB_NAME: environment_db
+      DB_USER: root
+      DB_PASSWORD: password
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - smartcity-network
+
+  python-ml-service:
+    build: ./python-ml-service
+    container_name: python-ml-service
+    ports:
+      - "5000:5000"
+    networks:
+      - smartcity-network
+
+networks:
+  smartcity-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
