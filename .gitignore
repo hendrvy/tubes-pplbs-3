@@ -1,0 +1,44 @@
+# Docker
+*.log
+*.pid
+*.pid.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+mysql_data/
+rabbitmq-data/
+grafana-data/
+prometheus-data/
+node-red-data/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Secrets
+*secret*
+*.pem
+*.key
+
+# Database init (sudah dijalankan via volume)
+docker/mysql/init.sql
