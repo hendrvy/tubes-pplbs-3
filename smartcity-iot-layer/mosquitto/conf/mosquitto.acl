@@ -3,6 +3,9 @@ topic write city/+/crowd
 topic write city/+/security
 topic write city/+/environment
 
+user node-red
+topic read city/+/crowd
+
 user admin
 topic read city/#
 topic write city/#

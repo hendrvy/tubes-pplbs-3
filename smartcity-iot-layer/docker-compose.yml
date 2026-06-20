@@ -15,6 +15,19 @@ services:
       - mosquitto_log:/mosquitto/log
     entrypoint: ["/bin/sh", "/mosquitto-entrypoint.sh"]
 
+node-red:
+    image: nodered/node-red:latest
+    container_name: city-node-red
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    ports:
+      - "1880:1880"
+    environment:
+      FLOWS: flows.json
+    volumes:
+      - ./node-red/data:/data
+      
 volumes:
   mosquitto_data:
   mosquitto_log:
