@@ -1,3 +1,8 @@
+# Fase 3 — Node-RED Flows
+
+Menambahkan Node-RED bridge flows di atas MQTT Broker (Fase 1) + Simulator (Fase 2).  
+Node-RED berfungsi sebagai jembatan (bridge) antara protokol MQTT dan REST API (PHP Service).
+
 ## Cara Menjalankan
 
 cd smartcity-iot-layer
