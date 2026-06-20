@@ -14,6 +14,23 @@
     "info": ""
   },
   {
+    "id": "mqtt-broker-city",
+    "type": "mqtt-broker",
+    "name": "City Mosquitto",
+    "broker": "mosquitto",
+    "port": "1883",
+    "clientid": "node-red-city-bridge",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "credentials": {
+      "user": "iot_device",
+      "password": "iot_secret"
+    }
+  },
+  {
     "id": "mqtt-crowd-in",
     "type": "mqtt in",
     "z": "tab-crowd",
@@ -61,6 +78,30 @@
     "wires": [[]]
   },
   {
+    "id": "catch-crowd",
+    "type": "catch",
+    "z": "tab-crowd",
+    "name": "Gateway Down",
+    "scope": ["http-crowd-post"],
+    "uncaught": false,
+    "x": 150,
+    "y": 150,
+    "wires": [["fn-crowd-queue"]]
+  },
+  {
+    "id": "fn-crowd-queue",
+    "type": "function",
+    "z": "tab-crowd",
+    "name": "Queue Failed Crowd",
+    "func": "msg.payload = JSON.stringify({\n    queued_at: new Date().toISOString(),\n    flow: 'crowd',\n    error: msg.error && msg.error.message,\n    payload: msg.payload\n}) + '\\n';\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "x": 380,
+    "y": 150,
+    "wires": [["file-failed-queue"]]
+  },
+  {
     "id": "mqtt-security-in",
     "type": "mqtt in",
     "z": "tab-security",
@@ -105,6 +146,44 @@
     "senderr": true,
     "x": 660,
     "y": 80,
+    "wires": [[]]
+  },
+  {
+    "id": "catch-security",
+    "type": "catch",
+    "z": "tab-security",
+    "name": "Gateway Down",
+    "scope": ["http-security-post"],
+    "uncaught": false,
+    "x": 150,
+    "y": 150,
+    "wires": [["fn-security-queue"]]
+  },
+  {
+    "id": "fn-security-queue",
+    "type": "function",
+    "z": "tab-security",
+    "name": "Queue Failed Security",
+    "func": "msg.payload = JSON.stringify({\n    queued_at: new Date().toISOString(),\n    flow: 'security',\n    error: msg.error && msg.error.message,\n    payload: msg.payload\n}) + '\\n';\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "x": 390,
+    "y": 150,
+    "wires": [["file-failed-queue"]]
+  },
+  {
+    "id": "file-failed-queue",
+    "type": "file",
+    "name": "Local Gateway Queue",
+    "filename": "/data/gateway-failed.jsonl",
+    "filenameType": "str",
+    "appendNewline": false,
+    "createDir": true,
+    "overwriteFile": "false",
+    "encoding": "utf8",
+    "x": 650,
+    "y": 150,
     "wires": [[]]
   }
 ]
