@@ -1,0 +1,7 @@
+# Abaikan folder yang tidak perlu
+/vendor/
+*.log
+.env
+
+# Abaikan konfigurasi database agar password tidak ter-upload
+config/database.php
