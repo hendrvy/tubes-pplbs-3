@@ -1,0 +1,6 @@
+# Abaikan folder yang tidak perlu
+/vendor/
+*.log
+.env
+# Abaikan folder konfigurasi jika ingin lebih aman
+# config/database.php
