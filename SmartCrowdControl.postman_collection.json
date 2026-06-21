@@ -1,0 +1,861 @@
+{
+  "info": {
+    "name": "Smart Crowd Control Platform",
+    "_postman_id": "smart-crowd-control-v1",
+    "description": "Koleksi lengkap API endpoint Smart Crowd Control Platform.\n\n## Setup\n1. Import collection ini ke Postman\n2. Set environment variable:\n   - `baseUrl` = `http://localhost:3000`\n   - `oauthUrl` = `http://localhost:3002`\n3. Jalankan request **[AUTH] Login Citizen** dulu — token otomatis tersimpan\n\n## Urutan test yang disarankan\n1. AUTH → Login Citizen\n2. CROWD → Get Current\n3. CROWD → Submit Reading\n4. ML → Predict Crowd\n5. ANOMALY → Detect",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",   "value": "http://localhost:3000", "type": "string" },
+    { "key": "oauthUrl",  "value": "http://localhost:3002", "type": "string" },
+    { "key": "token",     "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "reportId",  "value": "1", "type": "string" },
+    { "key": "incidentId","value": "1", "type": "string" },
+    { "key": "citizenId", "value": "1", "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "🔐 AUTH — OAuth 2.0",
+      "item": [
+        {
+          "name": "Login Citizen (Password Grant)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "  pm.collectionVariables.set('token', json.access_token);",
+                  "  pm.collectionVariables.set('refreshToken', json.refresh_token || '');",
+                  "  console.log('✅ Token tersimpan:', json.access_token.substring(0,30) + '...');",
+                  "}",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Ada access_token', () => pm.expect(json).to.have.property('access_token'));",
+                  "pm.test('Ada token_type Bearer', () => pm.expect(json.token_type).to.eql('Bearer'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "url": { "raw": "{{oauthUrl}}/oauth/token", "host": ["{{oauthUrl}}"], "path": ["oauth","token"] },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "password" },
+                { "key": "username",   "value": "officer@smartcity.id" },
+                { "key": "password",   "value": "password123" },
+                { "key": "client_id",  "value": "citizen_app" },
+                { "key": "client_secret", "value": "citizen_secret" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Client Credentials (IoT/Service-to-Service)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Ada access_token', () => pm.expect(json).to.have.property('access_token'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "url": { "raw": "{{oauthUrl}}/oauth/token", "host": ["{{oauthUrl}}"], "path": ["oauth","token"] },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type",    "value": "client_credentials" },
+                { "key": "client_id",     "value": "iot_device" },
+                { "key": "client_secret", "value": "iot_secret" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "  pm.collectionVariables.set('token', json.access_token);",
+                  "  console.log('✅ Token diperbarui');",
+                  "}",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "url": { "raw": "{{oauthUrl}}/oauth/token", "host": ["{{oauthUrl}}"], "path": ["oauth","token"] },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type",    "value": "refresh_token" },
+                { "key": "refresh_token", "value": "{{refreshToken}}" },
+                { "key": "client_id",     "value": "citizen_app" },
+                { "key": "client_secret", "value": "citizen_secret" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Introspect Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Token aktif', () => pm.expect(json.active).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "url": { "raw": "{{oauthUrl}}/oauth/introspect", "host": ["{{oauthUrl}}"], "path": ["oauth","introspect"] },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "token",         "value": "{{token}}" },
+                { "key": "client_id",     "value": "citizen_app" },
+                { "key": "client_secret", "value": "citizen_secret" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Revoke Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "url": { "raw": "{{oauthUrl}}/oauth/revoke", "host": ["{{oauthUrl}}"], "path": ["oauth","revoke"] },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "token",         "value": "{{token}}" },
+                { "key": "client_id",     "value": "citizen_app" },
+                { "key": "client_secret", "value": "citizen_secret" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏥 GATEWAY — Health & Metrics",
+      "item": [
+        {
+          "name": "Health Check (Semua Service)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 atau 207', () => {",
+                  "  pm.expect([200, 207]).to.include(pm.response.code);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Gateway up', () => pm.expect(json.gateway).to.eql('up'));",
+                  "pm.test('Ada list services', () => pm.expect(json.services).to.be.an('array'));",
+                  "pm.test('Response < 5s', () => pm.expect(pm.response.responseTime).to.be.below(5000));",
+                  "",
+                  "// Tampilkan status tiap service di console",
+                  "json.services.forEach(s => {",
+                  "  const icon = s.status === 'up' ? '✅' : '❌';",
+                  "  console.log(`${icon} ${s.name}: ${s.status} (${s.latency_ms}ms)`);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "Prometheus Metrics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Content-Type text/plain', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/metrics", "host": ["{{baseUrl}}"], "path": ["metrics"] }
+          }
+        },
+        {
+          "name": "Rate Limit Test (Burst 10 req)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Ada header RateLimit-Remaining', () => {",
+                  "  pm.expect(pm.response.headers.has('RateLimit-Remaining') ||",
+                  "             pm.response.headers.has('X-RateLimit-Remaining')).to.be.true;",
+                  "});",
+                  "const remaining = pm.response.headers.get('RateLimit-Remaining') ||",
+                  "                  pm.response.headers.get('X-RateLimit-Remaining');",
+                  "console.log('Sisa request:', remaining);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "404 — Route Tidak Ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Format standar: status error', () => pm.expect(json.status).to.eql('error'));",
+                  "pm.test('Format standar: ada service field', () => pm.expect(json.service).to.eql('api-gateway'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/route-tidak-ada", "host": ["{{baseUrl}}"], "path": ["route-tidak-ada"] }
+          }
+        },
+        {
+          "name": "401 — Akses Tanpa Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Ada pesan error', () => pm.expect(json.message).to.be.a('string'));",
+                  "pm.test('Service = api-gateway', () => pm.expect(json.service).to.eql('api-gateway'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/crowd/current", "host": ["{{baseUrl}}"], "path": ["api","crowd","current"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👥 CROWD SERVICE — Kerumunan",
+      "item": [
+        {
+          "name": "Get Status Kerumunan Real-time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Status success', () => pm.expect(json.status).to.eql('success'));",
+                  "pm.test('Ada data', () => pm.expect(json).to.have.property('data'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/crowd/current", "host": ["{{baseUrl}}"], "path": ["api","crowd","current"] }
+          }
+        },
+        {
+          "name": "Submit Pembacaan Sensor Kerumunan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Status success', () => pm.expect(json.status).to.eql('success'));",
+                  "if (json.data && json.data.id) {",
+                  "  console.log('Reading ID:', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/crowd/readings", "host": ["{{baseUrl}}"], "path": ["api","crowd","readings"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"zone_id\": 1,\n  \"density_count\": 250,\n  \"risk_level\": \"Waspada\",\n  \"source\": \"camera_sensor\",\n  \"recorded_at\": \"2025-06-11T10:00:00.000Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Submit Laporan Petugas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "  pm.collectionVariables.set('reportId', json.data.id);",
+                  "  console.log('Report ID tersimpan:', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/reports", "host": ["{{baseUrl}}"], "path": ["api","reports"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"zone_id\": 2,\n  \"category\": \"kerumunan_padat\",\n  \"description\": \"Kerumunan besar terdeteksi di pintu masuk zona 2, estimasi 500+ orang. Perlu tambahan petugas.\",\n  \"status\": \"open\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Daftar Laporan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Data adalah array', () => pm.expect(Array.isArray(json.data)).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports?status=open&zone_id=2",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","reports"],
+              "query": [
+                { "key": "status",  "value": "open" },
+                { "key": "zone_id", "value": "2" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Status Laporan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Status success', () => pm.expect(json.status).to.eql('success'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/reports/{{reportId}}/status", "host": ["{{baseUrl}}"], "path": ["api","reports","{{reportId}}","status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"note\": \"Tim dikirim ke lokasi\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Notifikasi Petugas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notifications", "host": ["{{baseUrl}}"], "path": ["api","notifications"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🚨 INCIDENT SERVICE — Insiden Keamanan",
+      "item": [
+        {
+          "name": "Laporkan Insiden Baru",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "  pm.collectionVariables.set('incidentId', json.data.id);",
+                  "  console.log('Incident ID:', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/incidents", "host": ["{{baseUrl}}"], "path": ["api","incidents"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"zone_id\": 1,\n  \"type\": \"crowd_surge\",\n  \"severity\": \"high\",\n  \"description\": \"Crowd surge terdeteksi di zona 1 dekat panggung utama. Tekanan massa tinggi.\",\n  \"reported_at\": \"2025-06-11T10:30:00.000Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Insiden Aktif per Zona",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Data adalah array', () => pm.expect(Array.isArray(json.data)).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/incidents?zone_id=1&status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","incidents"],
+              "query": [
+                { "key": "zone_id", "value": "1" },
+                { "key": "status",  "value": "active" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Resolve Insiden",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/incidents/{{incidentId}}/resolve", "host": ["{{baseUrl}}"], "path": ["api","incidents","{{incidentId}}","resolve"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolved_at\": \"2025-06-11T11:00:00.000Z\",\n  \"resolution_note\": \"Area berhasil dikosongkan. Situasi kondusif.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🌿 ENVIRONMENT SERVICE",
+      "item": [
+        {
+          "name": "Submit Pembacaan Sensor Lingkungan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/environment/readings", "host": ["{{baseUrl}}"], "path": ["api","environment","readings"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"zone_id\": 1,\n  \"pm25\": 45.2,\n  \"pm10\": 68.5,\n  \"no2\": 35.1,\n  \"co\": 1.2,\n  \"o3\": 80.0,\n  \"temperature\": 32.5,\n  \"humidity\": 75.0,\n  \"recorded_at\": \"2025-06-11T10:00:00.000Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Kondisi Lingkungan Real-time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/environment/current", "host": ["{{baseUrl}}"], "path": ["api","environment","current"] }
+          }
+        },
+        {
+          "name": "Get Alert Aktif (AQI Buruk)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/environment/alerts", "host": ["{{baseUrl}}"], "path": ["api","environment","alerts"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🤖 PYTHON ML — Prediksi & Analitik",
+      "item": [
+        {
+          "name": "Health ML Service",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Status ok', () => pm.expect(json.status).to.eql('ok'));",
+                  "pm.test('Ada daftar models', () => pm.expect(json.models).to.be.an('array'));",
+                  "console.log('Models loaded:', json.models);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/predict/health", "host": ["{{baseUrl}}"], "path": ["predict","health"] }
+          }
+        },
+        {
+          "name": "Prediksi Kepadatan Kerumunan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Ada predicted_density', () => pm.expect(json).to.have.property('predicted_density'));",
+                  "pm.test('Ada congestion_level', () => pm.expect(json).to.have.property('congestion_level'));",
+                  "pm.test('Response < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "console.log('Prediksi:', json.predicted_density, '|', json.congestion_level);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/predict/crowd", "host": ["{{baseUrl}}"], "path": ["predict","crowd"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hour\": 20,\n  \"day_of_week\": 6,\n  \"weather_code\": 0,\n  \"prev_density\": 320,\n  \"location\": \"zone1\",\n  \"event_flag\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Klasifikasi Risiko Area",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Ada risk_category', () => pm.expect(json).to.have.property('risk_category'));",
+                  "pm.test('Ada confidence', () => pm.expect(json.confidence).to.be.a('number'));",
+                  "console.log('Risiko:', json.risk_category, '| Confidence:', json.confidence);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/predict/risk", "host": ["{{baseUrl}}"], "path": ["predict","risk"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"density\": 450,\n  \"duration_min\": 120,\n  \"area_m2\": 500,\n  \"exits_count\": 2,\n  \"time_of_day\": 20\n}"
+            }
+          }
+        },
+        {
+          "name": "Deteksi Anomali Sensor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Ada is_anomaly', () => pm.expect(json).to.have.property('is_anomaly'));",
+                  "pm.test('Ada severity', () => pm.expect(json).to.have.property('severity'));",
+                  "const icon = json.is_anomaly ? '🚨' : '✅';",
+                  "console.log(icon, 'Anomali:', json.is_anomaly, '| Severity:', json.severity, '| Score:', json.anomaly_score);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/detect/anomaly", "host": ["{{baseUrl}}"], "path": ["detect","anomaly"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sensor_value\": 950,\n  \"timestamp_hour\": 20,\n  \"rolling_mean_1h\": 280,\n  \"z_score\": 3.8\n}"
+            }
+          }
+        },
+        {
+          "name": "Feature Importance Semua Model",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/model/feature-importance", "host": ["{{baseUrl}}"], "path": ["model","feature-importance"] }
+          }
+        },
+        {
+          "name": "Batch Prediction",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Results adalah array', () => pm.expect(Array.isArray(json.results)).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/predict/batch", "host": ["{{baseUrl}}"], "path": ["predict","batch"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"crowd\",\n  \"items\": [\n    { \"hour\": 18, \"day_of_week\": 5, \"weather_code\": 0, \"prev_density\": 200, \"location\": \"zone1\", \"event_flag\": 1 },\n    { \"hour\": 19, \"day_of_week\": 5, \"weather_code\": 0, \"prev_density\": 350, \"location\": \"zone2\", \"event_flag\": 1 },\n    { \"hour\": 20, \"day_of_week\": 5, \"weather_code\": 1, \"prev_density\": 500, \"location\": \"zone3\", \"event_flag\": 1 }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📡 IOT — Data Masuk dari Node-RED",
+      "item": [
+        {
+          "name": "IoT Submit Crowd Data (dari sensor/Node-RED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 atau 200', () => {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-IoT-Device", "value": "simulator-zone1" }
+            ],
+            "url": { "raw": "{{baseUrl}}/iot/crowd", "host": ["{{baseUrl}}"], "path": ["iot","crowd"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"zone\": \"zone1\",\n  \"vehicle_density\": 380,\n  \"speed_kmh\": 0,\n  \"timestamp\": \"2025-06-11T20:00:00.000Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "IoT Submit Security Data (dari sensor/Node-RED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 atau 200', () => {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-IoT-Device", "value": "security-sensor-zone1" }
+            ],
+            "url": { "raw": "{{baseUrl}}/iot/security", "host": ["{{baseUrl}}"], "path": ["iot","security"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"zone\": \"zone1\",\n  \"incident_flag\": true,\n  \"alert_level\": \"high\",\n  \"officer_count\": 5,\n  \"timestamp\": \"2025-06-11T20:00:00.000Z\"\n}"
+            }
+          }
+        }
+      ]
+    }
+
+  ]
+}
