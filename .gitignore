@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Environment variables - JANGAN PERNAH COMMIT
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*.pkl
+venv/
+.venv/
+
+# ML models (terlalu besar untuk git)
+python-ml-service/models/*.pkl
+
+# Logs
+logs/
+*.log
+
+# Docker volumes
+mysql-data/
+rabbitmq-data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
