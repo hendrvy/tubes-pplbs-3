@@ -12,7 +12,7 @@ const FORMAT =
 // Log ke console (development)
 const consoleLogger = morgan(FORMAT, {
   stream: process.stdout,
-  skip: (req) => req.path === '/health', // jangan log health check
+  skip: (req) => req.path === '/health', 
 });
 
 // Log ke file (production)

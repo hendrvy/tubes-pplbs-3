@@ -1,36 +1,50 @@
 const axios = require('axios');
 
-// ── Cache hasil introspect 30 detik biar tidak spam ke A2 ────
+// Cache introspect result selama 30 detik biar tidak spam ke A2
 const cache = new Map();
 const CACHE_TTL_MS = 30 * 1000;
 
 function getCached(token) {
   const entry = cache.get(token);
   if (!entry) return null;
-  if (Date.now() > entry.expiresAt) { cache.delete(token); return null; }
+  if (Date.now() > entry.expiresAt) {
+    cache.delete(token);
+    return null;
+  }
   return entry.result;
 }
+
 function setCache(token, result) {
-  cache.set(token, { result, expiresAt: Date.now() + CACHE_TTL_MS });
+  cache.set(token, {
+    result,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
 }
 
-// ── Public paths — skip introspect ───────────────────────────
+// Endpoint yang tidak perlu introspect
 const PUBLIC_PATHS = [
-  '/health', '/metrics',
-  '/oauth/token', '/oauth/introspect', '/oauth/revoke',
+  '/health',
+  '/metrics',
+  '/oauth/token',
+  '/oauth/introspect',
+  '/oauth/revoke',
 ];
 
-// ── Respons A2 /oauth/introspect ─────────────────────────────
-// active: true  → { active, userId, username, role, iat, exp }
-// active: false → { active: false }
-// Sumber: server.js A2 baris "return res.json({ active: true, ...decoded })"
-
 async function introspectMiddleware(req, res, next) {
-  if (PUBLIC_PATHS.some(p => req.path.startsWith(p))) return next();
-  if (req.path.startsWith('/iot')) return next(); // IoT pakai client_credentials
+  // Skip untuk public paths
+  if (PUBLIC_PATHS.some(p => req.path.startsWith(p))) {
+    return next();
+  }
+
+  // Skip untuk IoT — pakai client_credentials, sudah lolos JWT middleware
+  if (req.path.startsWith('/iot')) {
+    return next();
+  }
 
   const authHeader = req.headers['authorization'];
-  if (!authHeader?.startsWith('Bearer ')) return next(); // JWT middleware sudah handle 401
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next(); // JWT middleware sudah handle 401
+  }
 
   const token = authHeader.split(' ')[1];
 
@@ -39,54 +53,62 @@ async function introspectMiddleware(req, res, next) {
   if (cached !== null) {
     if (!cached.active) {
       return res.status(401).json({
-        status: 'error', code: 401,
+        status: 'error',
+        code: 401,
         message: 'Token sudah dicabut atau tidak aktif.',
         timestamp: new Date().toISOString(),
         service: 'api-gateway',
       });
     }
-    // Enrichment req.user dari hasil introspect A2
-    // A2 kembalikan: { active, userId, username, role, iat, exp }
-    // atau untuk client_credentials: { active, clientId, role, iat, exp }
+    // Inject info user dari A2 ke req.user
+    // A2 payload: { userId, username, role } atau { clientId, role }
     req.user = {
-      ...req.user,                          // sudah di-set oleh jwt.js
-      username: cached.username || req.user.username,
-      role:     cached.role     || req.user.role,
+      id:       cached.userId   || cached.clientId || null,
+      username: cached.username || cached.clientId || null,
+      role:     cached.role     || 'citizen',
+      // zone_id tidak ada di A2 — default null
+      zone_id:  cached.zone_id  || null,
     };
     return next();
   }
 
-  // ── Panggil POST /oauth/introspect ke A2 ─────────────────
+  // Panggil introspect ke A2
   try {
     const oauthUrl = process.env.OAUTH_SERVER_URL || 'http://localhost:3002';
-    const { data } = await axios.post(
+    const response = await axios.post(
       `${oauthUrl}/oauth/introspect`,
-      new URLSearchParams({ token }),         // A2 expect urlencoded body
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 3000 }
+      new URLSearchParams({ token }),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        timeout: 3000,
+      }
     );
 
+    const data = response.data;
     setCache(token, data);
 
     if (!data.active) {
       return res.status(401).json({
-        status: 'error', code: 401,
+        status: 'error',
+        code: 401,
         message: 'Token sudah dicabut atau tidak aktif.',
         timestamp: new Date().toISOString(),
         service: 'api-gateway',
       });
     }
 
-    // Enrich req.user dengan data dari A2
+    // Normalize payload A2 ke format standar req.user
     req.user = {
-      ...req.user,
-      username: data.username || data.clientId || req.user.username,
-      role:     data.role     || req.user.role,
+      id:       data.userId   || data.clientId || null,
+      username: data.username || data.clientId || null,
+      role:     data.role     || 'citizen',
+      zone_id:  data.zone_id  || null,
     };
 
     next();
   } catch (err) {
-    // A2 down → fallback ke JWT lokal saja (sudah diverifikasi jwt.js)
-    console.warn(`[INTROSPECT] A2 tidak bisa dijangkau (${err.message}) — fallback JWT lokal`);
+    // Kalau OAuth Server down → fallback ke JWT lokal saja (sudah diverifikasi middleware sebelumnya)
+    console.warn(`[INTROSPECT] OAuth Server tidak bisa dijangkau: ${err.message} — fallback ke JWT lokal`);
     next();
   }
 }

@@ -29,7 +29,16 @@ function jwtMiddleware(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { id, email, role, zone_id, iat, exp }
+    // A2 payload: { userId, username, role } untuk password grant
+    //             { clientId, role } untuk client_credentials
+    // Normalize ke format standar agar proxy.js bisa pakai req.user.id
+    req.user = {
+      id:       decoded.userId   || decoded.clientId || null,
+      username: decoded.username || decoded.clientId || null,
+      role:     decoded.role     || 'citizen',
+      zone_id:  decoded.zone_id  || null,
+      raw:      decoded,         // simpan decoded asli kalau dibutuhkan
+    };
     next();
   } catch (err) {
     const message =
