@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import pika
@@ -18,12 +18,12 @@ from app.schemas.prediction import (
 
 def parse_timestamp(value: str | None) -> datetime:
     if not value:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
     normalized = value.replace("Z", "+00:00")
     try:
         return datetime.fromisoformat(normalized)
     except ValueError:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
 
 
 def zone_to_location(payload: dict[str, Any]) -> str:
@@ -83,7 +83,7 @@ def process_crowd_event(payload: dict[str, Any]) -> dict[str, Any]:
         "crowd_prediction": crowd,
         "anomaly_detection": anomaly,
         "should_alert": anomaly["is_anomaly"] or crowd["congestion_level"] == "Bahaya",
-        "processed_at": datetime.utcnow().isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -110,7 +110,7 @@ def process_incident_event(payload: dict[str, Any]) -> dict[str, Any]:
         "source_event": payload,
         "risk_prediction": risk,
         "should_alert": risk["risk_category"] == "Bahaya",
-        "processed_at": datetime.utcnow().isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -166,4 +166,3 @@ def start_consumer() -> None:
 
 if __name__ == "__main__":
     start_consumer()
-

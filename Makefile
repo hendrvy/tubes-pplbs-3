@@ -1,4 +1,4 @@
-.PHONY: up down logs ps build test gateway-dev health
+.PHONY: up down logs ps build test gateway-dev ml-dev ml-test health
 
 # ── Docker Compose ───────────────────────────────────────────
 up:
@@ -29,9 +29,15 @@ db-setup: db-migrate db-seed
 gateway-dev:
 	cd express-gateway && npm run dev
 
+ml-dev:
+	cd python-ml-service && uvicorn app.main:app --host 0.0.0.0 --port 5000 --reload
+
 # ── Testing ───────────────────────────────────────────────────
 test:
 	cd express-gateway && npm test
+
+ml-test:
+	cd python-ml-service && pytest
 
 # ── Health check ─────────────────────────────────────────────
 health:
