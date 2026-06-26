@@ -20,6 +20,7 @@ python-ml-service/models/*.pkl
 # Logs
 logs/
 *.log
+python-ml-service/reports/.matplotlib/
 
 # Docker volumes
 mysql-data/
