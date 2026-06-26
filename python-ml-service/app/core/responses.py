@@ -8,7 +8,12 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def ok(message: str, data: Any | None = None, code: int = 200) -> dict[str, Any]:
+def ok(
+    message: str,
+    data: Any | None = None,
+    code: int = 200,
+    **extra: Any,
+) -> dict[str, Any]:
     response: dict[str, Any] = {
         "status": "success",
         "code": code,
@@ -18,5 +23,5 @@ def ok(message: str, data: Any | None = None, code: int = 200) -> dict[str, Any]
     }
     if data is not None:
         response["data"] = data
+    response.update(extra)
     return response
-
