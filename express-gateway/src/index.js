@@ -2,13 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 
-const logger             = require('./middleware/logger');
-const jwtMiddleware      = require('./middleware/jwt');
+const logger               = require('./middleware/logger');
+const jwtMiddleware        = require('./middleware/jwt');
 const introspectMiddleware = require('./middleware/introspect');
 const { globalLimiter, authLimiter, iotLimiter } = require('./middleware/rateLimit');
-const errorHandler       = require('./middleware/errorHandler');
+const errorHandler         = require('./middleware/errorHandler');
 const { router: metricsRouter, metricsMiddleware } = require('./routes/metrics');
-const healthRouter       = require('./routes/health');
+const healthRouter         = require('./routes/health');
 const {
   crowdProxy, incidentProxy, envProxy,
   mlProxy, oauthProxy, iotCrowdProxy, iotSecurityProxy,
@@ -17,33 +17,38 @@ const {
 app.use(metricsMiddleware);
 app.use(logger);
 
-// ── Public routes — SEBELUM body parser ─────────────────────
-// /oauth/* langsung di-proxy TANPA express.json/urlencoded
-// supaya body tidak di-consume express lebih dulu
+// ── Public routes — SEBELUM body parser ──────────────────────
 app.use('/health',  healthRouter);
 app.use('/metrics', metricsRouter);
-app.use('/oauth',   oauthProxy);   // ← PINDAH KE SINI sebelum body parser
+app.use('/oauth',   oauthProxy);
 
-// ── Body parser — hanya untuk route selain /oauth ────────────
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ── IoT endpoints ────────────────────────────────────────────
+// ── IoT endpoints — SEBELUM body parser ──────────────────────
 app.use('/iot/crowd',    iotLimiter, iotCrowdProxy);
 app.use('/iot/security', iotLimiter, iotSecurityProxy);
 
-// ── Protected routes ─────────────────────────────────────────
+// ── Protected routes — SEBELUM body parser ───────────────────
 app.use(globalLimiter);
 app.use(jwtMiddleware);
 app.use(introspectMiddleware);
 app.use(authLimiter);
 
-app.use('/api/crowd',       crowdProxy);
-app.use('/api/incidents',   incidentProxy);
-app.use('/api/environment', envProxy);
-app.use('/predict',         mlProxy);
-app.use('/detect',          mlProxy);
-app.use('/model',           mlProxy);
+// ── Semua proxy SEBELUM body parser ──────────────────────────
+// Dengan begini body tidak pernah ter-consume express
+// dan langsung di-stream ke upstream service
+app.use('/api/crowd',         crowdProxy);
+app.use('/api/reports',       crowdProxy);
+app.use('/api/notifications', crowdProxy);
+app.use('/api/incidents',     incidentProxy);
+app.use('/api/zones',         incidentProxy);
+app.use('/api/environment',   envProxy);
+app.use('/predict',           mlProxy);
+app.use('/detect',            mlProxy);
+app.use('/model',             mlProxy);
+
+// ── Body parser — setelah semua proxy ────────────────────────
+// Hanya untuk route non-proxy yang butuh req.body
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ── 404 ───────────────────────────────────────────────────────
 app.use((req, res) => {

@@ -8,11 +8,12 @@ function makeProxy(target, pathRewrite = {}) {
     on: {
       proxyReq: (proxyReq, req) => {
         if (req.user) {
-          proxyReq.setHeader('X-User-Id',  req.user.id  || '');
-          proxyReq.setHeader('X-User-Role', req.user.role || '');
-          proxyReq.setHeader('X-User-Zone', req.user.zone_id || '');
+          proxyReq.setHeader('X-User-Id',   req.user.id   || '');
+          proxyReq.setHeader('X-User-Role',  req.user.role || '');
+          proxyReq.setHeader('X-User-Zone',  req.user.zone_id || '');
         }
         proxyReq.setHeader('X-Forwarded-By', 'smart-crowd-gateway');
+        // Tidak ada body manipulation — biarkan stream langsung
       },
       error: (err, req, res) => {
         console.error(`[PROXY ERROR] ${target} - ${err.message}`);
