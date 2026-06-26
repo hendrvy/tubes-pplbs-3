@@ -47,9 +47,9 @@ def classify_risk(density: float, duration_min: float, area_m2: float, exits: in
         + 0.00085 * exit_pressure
         + 0.22 * event_intensity
     )
-    if score >= 1.02:
+    if score >= 0.72:
         return "Bahaya"
-    if score >= 0.62:
+    if score >= 0.42:
         return "Waspada"
     return "Aman"
 
@@ -189,4 +189,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
