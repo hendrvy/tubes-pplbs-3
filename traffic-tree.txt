@@ -1,0 +1,23 @@
+Folder PATH listing for volume Windows
+Volume serial number is 000001C4 9E70:8821
+C:\USERS\DANGE\ONEDRIVE\DOKUMEN\TUGAS\SEMESTER 4\SE 2\TUBES-PPLBS-3\PHP-TRAFFIC
++---app
+¦   +---Controllers
+¦   ¦       AlertController.php
+¦   ¦       IncidentController.php
+¦   ¦       ZoneController.php
+¦   ¦       
+¦   +---Models
+¦   ¦       Alert.php
+¦   ¦       Incident.php
+¦   ¦       Zone.php
+¦   ¦       
+¦   +---utils
+¦           Validator.php
+¦           
++---config
+¦       database.php
+¦       
++---public
+        index.php
+        
