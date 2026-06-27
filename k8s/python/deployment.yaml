@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: python-ml
+  namespace: smart-crowd
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: python-ml
+
+  template:
+    metadata:
+      labels:
+        app: python-ml
+
+    spec:
+      containers:
+        - name: python-ml
+
+          image: smart-python-ml:latest
+
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 5000
+
+          envFrom:
+            - configMapRef:
+                name: smart-crowd-config
+
+            - secretRef:
+                name: smart-crowd-secret
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000

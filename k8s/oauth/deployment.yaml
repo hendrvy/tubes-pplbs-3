@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: oauth
+  namespace: smart-crowd
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: oauth
+
+  template:
+    metadata:
+      labels:
+        app: oauth
+
+    spec:
+      containers:
+        - name: oauth
+
+          image: smart-crowd-oauth:latest
+
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 3002
+
+          envFrom:
+            - configMapRef:
+                name: smart-crowd-config
+
+            - secretRef:
+                name: smart-crowd-secret
+
+          readinessProbe:
+            httpGet:
+              path: /oauth/token
+              port: 3002
+
+            initialDelaySeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /oauth/token
+              port: 3002
+
+            initialDelaySeconds: 30
