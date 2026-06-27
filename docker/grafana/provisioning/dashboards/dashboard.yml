@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Smart Crowd
+
+    folder: ""
+
+    type: file
+
+    options:
+      path: /var/lib/grafana/dashboards

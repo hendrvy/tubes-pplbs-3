@@ -1,0 +1,35 @@
+CREATE DATABASE IF NOT EXISTS citizen_db;
+CREATE DATABASE IF NOT EXISTS traffic_db;
+
+USE citizen_db;
+
+CREATE TABLE IF NOT EXISTS crowd_readings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    zone VARCHAR(100),
+    density FLOAT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message TEXT,
+    status VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+USE traffic_db;
+
+CREATE TABLE IF NOT EXISTS incidents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    zone VARCHAR(100),
+    level VARCHAR(50),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS alerts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255),
+    message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
