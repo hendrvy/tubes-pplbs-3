@@ -91,7 +91,7 @@ curl http://localhost:3000/health
 ssh -p 8989 mahasiswa@103.147.92.134
 
 # Clone dan setup
-cd /home/mahasiswa/kelompok1/
+cd /home/mahasiswa/kelompok3/
 git clone https://github.com/<username>/smart-crowd-control.git .
 cp .env.example .env && nano .env
 
