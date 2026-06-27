@@ -27,40 +27,42 @@ services:
       file: docker-compose.yml
       service: express-gateway
 
-    environment:
-      NODE_ENV: development
-
-    volumes:
-      - ./express-gateway:/app
+    restart: always
 
   oauth-server:
     extends:
       file: docker-compose.yml
       service: oauth-server
 
-    volumes:
-      - ./oauth-server:/app
+    restart: always
 
   php-citizen:
     extends:
       file: docker-compose.yml
       service: php-citizen
 
-    volumes:
-      - ./php-citizen:/var/www/html
+    restart: always
 
   php-traffic:
     extends:
       file: docker-compose.yml
       service: php-traffic
 
-    volumes:
-      - ./php-traffic:/var/www/html
+    restart: always
 
   python-ml:
     extends:
       file: docker-compose.yml
       service: python-ml
 
-    volumes:
-      - ./python-ml-service:/app
+    restart: always
+
+  prometheus:
+    extends:
+      file: docker-compose.yml
+      service: prometheus
+
+  grafana:
+    extends:
+      file: docker-compose.yml
+      service: grafana
