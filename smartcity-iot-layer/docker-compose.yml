@@ -1,0 +1,64 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: city-mosquitto
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PUBLIC_PORT:-1884}:1883"
+    environment:
+      MQTT_USERNAME: iot_device
+      MQTT_PASSWORD: iot_secret
+    volumes:
+      - ./mosquitto/conf/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/scripts/entrypoint.sh:/mosquitto-entrypoint.sh:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    entrypoint: ["/bin/sh", "/mosquitto-entrypoint.sh"]
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: city-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: iot_user
+      RABBITMQ_DEFAULT_PASS: iot_secret
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  node-red:
+    image: nodered/node-red:latest
+    container_name: city-node-red
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    ports:
+      - "1880:1880"
+    environment:
+      FLOWS: flows.json
+    volumes:
+      - ./node-red/data:/data
+
+  api:
+    image: node:22-alpine
+    container_name: city-iot-api
+    restart: unless-stopped
+    depends_on:
+      - rabbitmq
+    working_dir: /app
+    command: sh -c "npm install && npm start"
+    ports:
+      - "3005:3000"
+    environment:
+      PORT: 3000
+      RABBITMQ_URL: amqp://iot_user:iot_secret@rabbitmq:5672
+      RABBITMQ_EXCHANGE: city.events
+    volumes:
+      - ./api-gateway:/app
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  rabbitmq_data:
