@@ -1,74 +1,70 @@
 const express = require('express');
 const axios = require('axios');
+
 const router = express.Router();
 
-// Setiap service punya endpoint health yang berbeda
-// A2 tidak punya /health — pakai POST /oauth/introspect dengan token kosong
-// kalau dapat 400/401 berarti service UP (bukan network error)
 const SERVICES = [
   {
     name: 'oauth-server',
-    url:  (process.env.OAUTH_SERVER_URL || 'http://localhost:3002') + '/oauth/token',
+    url: (process.env.OAUTH_SERVER_URL || 'http://oauth-server:3002') + '/oauth/token',
     method: 'post',
-    // kirim body kosong — A2 akan balas 400 (bukan 502/ECONNREFUSED)
-    // 400 = service UP, ECONNREFUSED = service DOWN
-    data: '',
-    validateStatus: (s) => s < 500, // 400 = up, 5xx = down
+    data: {},
+    validateStatus: (status) => status < 500,
   },
   {
-    name: 'crowd-service',
-    url:  (process.env.CROWD_SERVICE_URL || 'http://localhost:8000') + '/health',
+    name: 'php-citizen',
+    url: (process.env.CITIZEN_SERVICE_URL || 'http://php-citizen') + '/health.php',
     method: 'get',
-    validateStatus: (s) => s < 500,
+    validateStatus: (status) => status < 500,
   },
   {
-    name: 'incident-service',
-    url:  (process.env.INCIDENT_SERVICE_URL || 'http://localhost:8001') + '/health',
+    name: 'php-traffic',
+    url: (process.env.TRAFFIC_SERVICE_URL || 'http://php-traffic') + '/health.php',
     method: 'get',
-    validateStatus: (s) => s < 500,
-  },
-  {
-    name: 'env-service',
-    url:  (process.env.ENV_SERVICE_URL || 'http://localhost:8002') + '/health',
-    method: 'get',
-    validateStatus: (s) => s < 500,
+    validateStatus: (status) => status < 500,
   },
   {
     name: 'python-ml',
-    url:  (process.env.PYTHON_ML_URL || 'http://localhost:5000') + '/health',
+    url: (process.env.PYTHON_ML_URL || 'http://python-ml:5000') + '/health',
     method: 'get',
-    validateStatus: (s) => s < 500,
+    validateStatus: (status) => status < 500,
   },
 ];
 
-async function checkService(svc) {
+async function checkService(service) {
   const start = Date.now();
+
   try {
-    const res = await axios({
-      method: svc.method || 'get',
-      url: svc.url,
-      data: svc.data,
+    const response = await axios({
+      method: service.method,
+      url: service.url,
+      data: service.data,
       timeout: 3000,
-      validateStatus: svc.validateStatus || ((s) => s < 500),
+      validateStatus: service.validateStatus,
     });
+
     return {
-      name: svc.name,
+      name: service.name,
       status: 'up',
+      http_status: response.status,
       latency_ms: Date.now() - start,
-      http_status: res.status,
     };
-  } catch {
+  } catch (err) {
     return {
-      name: svc.name,
+      name: service.name,
       status: 'down',
       latency_ms: Date.now() - start,
+      error: err.code || err.message,
     };
   }
 }
 
 router.get('/', async (req, res) => {
-  const results = await Promise.all(SERVICES.map(checkService));
-  const allUp = results.every(r => r.status === 'up');
+  const results = await Promise.all(
+    SERVICES.map(checkService)
+  );
+
+  const allUp = results.every(service => service.status === 'up');
 
   res.status(allUp ? 200 : 207).json({
     status: allUp ? 'healthy' : 'degraded',

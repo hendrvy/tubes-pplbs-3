@@ -132,6 +132,14 @@ app.get('/api/protected-test', verifyToken, (req, res) => {
     res.json({ message: 'Anda berhasil masuk!', user: req.user });
 });
 
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "healthy",
+        service: "oauth-server",
+        timestamp: new Date().toISOString()
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Auth Service berjalan di http://localhost:${PORT}`);
 });

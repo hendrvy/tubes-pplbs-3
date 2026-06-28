@@ -41,19 +41,23 @@ function jwtMiddleware(req, res, next) {
     };
     next();
   } catch (err) {
-    const message =
-      err.name === 'TokenExpiredError'
-        ? 'Token sudah kadaluarsa. Silakan login ulang.'
-        : 'Token tidak valid.';
+  console.error("JWT VERIFY ERROR:");
+  console.error(err);
 
-    return res.status(401).json({
-      status: 'error',
-      code: 401,
-      message,
-      timestamp: new Date().toISOString(),
-      service: 'api-gateway',
-    });
-  }
+  const message =
+    err.name === "TokenExpiredError"
+      ? "Token sudah kadaluarsa. Silakan login ulang."
+      : err.message;
+
+  return res.status(401).json({
+    status: "error",
+    code: 401,
+    message,
+    error_name: err.name,
+    timestamp: new Date().toISOString(),
+    service: "api-gateway",
+  });
+}
 }
 
 module.exports = jwtMiddleware;

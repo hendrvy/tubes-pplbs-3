@@ -1,17 +1,28 @@
 <?php
-$host = 'localhost';
-$db   = 'smart_city_db';
-$user = 'root';
-$pass = '';
+
+$host = getenv('DB_HOST') ?: 'mysql';
+$db   = getenv('DB_NAME') ?: 'smart_city_db';
+$user = getenv('DB_USER') ?: 'root';
+$pass = getenv('DB_PASSWORD') ?: 'password';
 
 try {
+    $dsn = "mysql:host={$host};dbname={$db};charset=utf8mb4";
+
     $pdo = new PDO(
-        "mysql:host=$host;dbname=$db;charset=utf8",
+        $dsn,
         $user,
         $pass,
-        [PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false]
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]
     );
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    die(json_encode(['error' => 'Database Connection Failed: ' . $e->getMessage()]));
+    http_response_code(500);
+
+    die(json_encode([
+        "status" => "error",
+        "message" => "Database Connection Failed",
+        "detail" => $e->getMessage()
+    ]));
 }

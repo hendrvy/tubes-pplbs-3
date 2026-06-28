@@ -1,4 +1,11 @@
 <?php
+
+file_put_contents('/tmp/test.log', date('c') . " REQUEST: " . ($_SERVER['REQUEST_URI'] ?? 'CLI') . PHP_EOL, FILE_APPEND);
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/../config/database.php';
 
 spl_autoload_register(function ($class) {

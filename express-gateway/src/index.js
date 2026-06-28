@@ -40,7 +40,6 @@ app.use('/api/reports',       crowdProxy);
 app.use('/api/notifications', crowdProxy);
 app.use('/api/incidents',     incidentProxy);
 app.use('/api/zones',         incidentProxy);
-app.use('/api/environment',   envProxy);
 app.use('/predict',           mlProxy);
 app.use('/detect',            mlProxy);
 app.use('/model',             mlProxy);
