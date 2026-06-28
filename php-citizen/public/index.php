@@ -10,11 +10,11 @@ header('Content-Type: application/json');
 
 $method = $_SERVER['REQUEST_METHOD'];
 $path   = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-echo json_encode([
+/*echo json_encode([
     "uri" => $_SERVER['REQUEST_URI'],
     "path" => $path
 ]);
-exit;
+exit;*/
 $input  = json_decode(file_get_contents('php://input'), true) ?? [];
 
 // ── Health check — dipakai A1 Gateway ────────────────────────

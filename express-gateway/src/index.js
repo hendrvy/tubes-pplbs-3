@@ -33,8 +33,6 @@ app.use(introspectMiddleware);
 app.use(authLimiter);
 
 // ── Semua proxy SEBELUM body parser ──────────────────────────
-// Dengan begini body tidak pernah ter-consume express
-// dan langsung di-stream ke upstream service
 app.use('/api/crowd',         crowdProxy);
 app.use('/api/reports',       crowdProxy);
 app.use('/api/notifications', crowdProxy);
@@ -45,7 +43,6 @@ app.use('/detect',            mlProxy);
 app.use('/model',             mlProxy);
 
 // ── Body parser — setelah semua proxy ────────────────────────
-// Hanya untuk route non-proxy yang butuh req.body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
