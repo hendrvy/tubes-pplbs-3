@@ -1,0 +1,143 @@
+{
+  "info": {
+    "name": "City IoT Layer API",
+    "description": "Koleksi endpoint API untuk City IoT Layer\n\nBase URL: http://localhost:3000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "POST /iot/crowd",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"zone\": \"zone1\",\n  \"density_count\": 720,\n  \"risk_level\": \"high\",\n  \"speed\": 1.45,\n  \"timestamp\": \"2026-06-28T10:30:00Z\",\n  \"event_type\": \"concert\",\n  \"simulator\": \"city-iot-simulator\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/iot/crowd",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["iot", "crowd"]
+        }
+      }
+    },
+    {
+      "name": "POST /iot/security",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"zone\": \"zone1\",\n  \"incident_flag\": true,\n  \"officer_count\": 3,\n  \"alert_level\": \"critical\",\n  \"timestamp\": \"2026-06-28T10:30:00Z\",\n  \"event_type\": \"demo\",\n  \"simulator\": \"city-iot-simulator\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/iot/security",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["iot", "security"]
+        }
+      }
+    },
+    {
+      "name": "POST /iot/environment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"zone\": \"zone1\",\n  \"temperature\": 28.5,\n  \"humidity\": 72.0,\n  \"visibility\": 8.2,\n  \"timestamp\": \"2026-06-28T10:30:00Z\",\n  \"event_type\": null,\n  \"simulator\": \"city-iot-simulator\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/iot/environment",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["iot", "environment"]
+        }
+      }
+    },
+    {
+      "name": "POST /iot/anomaly-alert",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"zone\": \"zone4\",\n  \"alert_level\": \"critical\",\n  \"reason\": \"Suhu ekstrem terdeteksi: 62.0°C di luar batas normal\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/iot/anomaly-alert",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["iot", "anomaly-alert"]
+        }
+      }
+    },
+    {
+      "name": "POST /iot/command",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"command\": \"deploy_officers\",\n  \"target\": \"zone1\",\n  \"params\": {\n    \"count\": 10,\n    \"priority\": \"high\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/iot/command",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["iot", "command"]
+        }
+      }
+    },
+    {
+      "name": "POST /reports",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"report_id\": \"RPT-20260628-001\",\n  \"zone\": \"zone2\",\n  \"message\": \"Terjadi kerusakan sensor lingkungan di area timur\",\n  \"reported_by\": \"operator-01\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/reports",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["reports"]
+        }
+      }
+    }
+  ]
+}

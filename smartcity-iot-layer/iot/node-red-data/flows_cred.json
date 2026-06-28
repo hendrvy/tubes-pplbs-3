@@ -1,0 +1,6 @@
+{
+    "mqtt-broker-city": {
+        "user": "iot_device",
+        "password": "iot_secret"
+    }
+}

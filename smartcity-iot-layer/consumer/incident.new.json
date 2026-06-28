@@ -1,0 +1,14 @@
+[
+  {
+    "zone": "zone1",
+    "incident_flag": true,
+    "officer_count": 10,
+    "alert_level": "high",
+    "timestamp": "2026-06-28T08:13:39.076928+00:00",
+    "event_type": null,
+    "test_run_id": null,
+    "source_topic": "city/zone1/security",
+    "sensor_type": "security",
+    "received_at": "2026-06-28T08:13:39.563Z"
+  }
+]
