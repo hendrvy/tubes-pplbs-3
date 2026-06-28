@@ -15,6 +15,8 @@ cd smartcity-iot-layer
 ### 2. Nyalakan seluruh stack
 
 ```bash
+docker compose down
+
 docker compose up -d
 ```
 
@@ -41,7 +43,7 @@ Akses:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
@@ -62,7 +64,7 @@ Kamu akan melihat pesan JSON yang diterbitkan simulator.
 Buka terminal baru dan jalankan:
 
 ```bash
-PUBLISH_INTERVAL_SECONDS=5 .venv/bin/python3 iot/simulator.py
+$env:PUBLISH_INTERVAL_SECONDS="5"; .\.venv\Scripts\python.exe .\iot\simulator.py
 ```
 
 Simulator menampilkan logging real-time:
@@ -184,7 +186,7 @@ Test memverifikasi 10 skenario: health check (7 queue), direct API publish (crow
 data dari rabbitmq queue `crowd.new` dan `incident.new` akan dikonsumsi oleh test ini. Pastikan service `city-rabbitmq` dan `city-iot-api` sudah berjalan.
 
 ```bash
-node --test test/consume.test.js
+node consume.js
 ```
 
 ## Catatan penting

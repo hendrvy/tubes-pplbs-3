@@ -1,14 +1,26 @@
 [
   {
+    "zone": "zone4",
+    "incident_flag": true,
+    "officer_count": 12,
+    "alert_level": "high",
+    "timestamp": "2026-06-28T08:42:21.399841+00:00",
+    "event_type": null,
+    "test_run_id": null,
+    "source_topic": "city/zone4/security",
+    "sensor_type": "security",
+    "received_at": "2026-06-28T08:42:22.363Z"
+  },
+  {
     "zone": "zone1",
     "incident_flag": true,
-    "officer_count": 10,
+    "officer_count": 9,
     "alert_level": "high",
-    "timestamp": "2026-06-28T08:13:39.076928+00:00",
+    "timestamp": "2026-06-28T08:42:37.302807+00:00",
     "event_type": null,
     "test_run_id": null,
     "source_topic": "city/zone1/security",
     "sensor_type": "security",
-    "received_at": "2026-06-28T08:13:39.563Z"
+    "received_at": "2026-06-28T08:42:37.292Z"
   }
 ]
