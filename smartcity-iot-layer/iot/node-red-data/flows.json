@@ -1,0 +1,392 @@
+[
+    {
+        "id": "df523da6761eef69",
+        "type": "tab",
+        "label": "Recovered Nodes",
+        "disabled": false,
+        "info": "The nodes on this flow were missing a valid flow id when they were imported. They have been added to this flow so you can either restore or delete them.",
+        "env": []
+    },
+    {
+        "id": "tab-crowd",
+        "type": "tab",
+        "label": "Flow 1 - Crowd Bridge",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "tab-security",
+        "type": "tab",
+        "label": "Flow 2 - Security Bridge",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "tab-environment",
+        "type": "tab",
+        "label": "Flow 3 - Environment Bridge",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "mqtt-broker-city",
+        "type": "mqtt-broker",
+        "name": "City Mosquitto",
+        "broker": "mosquitto",
+        "port": "1883",
+        "clientid": "node-red-city-bridge",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "file-failed-queue",
+        "type": "file",
+        "z": "df523da6761eef69",
+        "name": "Local Gateway Queue",
+        "filename": "/data/gateway-failed.jsonl",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "utf8",
+        "x": 650,
+        "y": 150,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "mqtt-crowd-in",
+        "type": "mqtt in",
+        "z": "tab-crowd",
+        "name": "city/+/crowd",
+        "topic": "city/+/crowd",
+        "qos": "1",
+        "datatype": "json",
+        "broker": "mqtt-broker-city",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 130,
+        "y": 80,
+        "wires": [
+            [
+                "fn-crowd-transform"
+            ]
+        ]
+    },
+    {
+        "id": "fn-crowd-transform",
+        "type": "function",
+        "z": "tab-crowd",
+        "name": "Transform Crowd Payload",
+        "func": "const [, zone] = msg.topic.split('/');\nconst payload = typeof msg.payload === 'object' ? msg.payload : JSON.parse(msg.payload);\nmsg.payload = {\n    zone,\n    density_count: Number(payload.density_count),\n    risk_level: payload.risk_level,\n    speed: Number(payload.speed),\n    timestamp: payload.timestamp,\n    event_type: payload.event_type || null,\n    test_run_id: payload.test_run_id || null,\n    source_topic: msg.topic\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 80,
+        "wires": [
+            [
+                "http-crowd-post"
+            ]
+        ]
+    },
+    {
+        "id": "http-crowd-post",
+        "type": "http request",
+        "z": "tab-crowd",
+        "name": "POST /iot/crowd",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://api:3000/iot/crowd",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": true,
+        "headers": [
+            {
+                "keyType": "str",
+                "keyValue": "Content-Type",
+                "valueType": "str",
+                "valueValue": "application/json"
+            }
+        ],
+        "x": 630,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "catch-crowd",
+        "type": "catch",
+        "z": "tab-crowd",
+        "name": "Gateway Down",
+        "scope": [
+            "http-crowd-post"
+        ],
+        "uncaught": false,
+        "x": 150,
+        "y": 150,
+        "wires": [
+            [
+                "fn-crowd-queue"
+            ]
+        ]
+    },
+    {
+        "id": "fn-crowd-queue",
+        "type": "function",
+        "z": "tab-crowd",
+        "name": "Queue Failed Crowd",
+        "func": "msg.payload = JSON.stringify({\n    queued_at: new Date().toISOString(),\n    flow: 'crowd',\n    error: msg.error && msg.error.message,\n    payload: msg.payload\n}) + '\\n';\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 150,
+        "wires": [
+            [
+                "file-failed-queue"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt-security-in",
+        "type": "mqtt in",
+        "z": "tab-security",
+        "name": "city/+/security",
+        "topic": "city/+/security",
+        "qos": "1",
+        "datatype": "json",
+        "broker": "mqtt-broker-city",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 140,
+        "y": 80,
+        "wires": [
+            [
+                "fn-security-transform"
+            ]
+        ]
+    },
+    {
+        "id": "fn-security-transform",
+        "type": "function",
+        "z": "tab-security",
+        "name": "Transform Security Payload",
+        "func": "const [, zone] = msg.topic.split('/');\nconst payload = typeof msg.payload === 'object' ? msg.payload : JSON.parse(msg.payload);\nmsg.payload = {\n    zone,\n    incident_flag: Boolean(payload.incident_flag),\n    officer_count: Number(payload.officer_count),\n    alert_level: payload.alert_level,\n    timestamp: payload.timestamp,\n    event_type: payload.event_type || null,\n    test_run_id: payload.test_run_id || null,\n    source_topic: msg.topic\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 390,
+        "y": 80,
+        "wires": [
+            [
+                "http-security-post"
+            ]
+        ]
+    },
+    {
+        "id": "http-security-post",
+        "type": "http request",
+        "z": "tab-security",
+        "name": "POST /iot/security",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://api:3000/iot/security",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": true,
+        "headers": [
+            {
+                "keyType": "str",
+                "keyValue": "Content-Type",
+                "valueType": "str",
+                "valueValue": "application/json"
+            }
+        ],
+        "x": 660,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "catch-security",
+        "type": "catch",
+        "z": "tab-security",
+        "name": "Gateway Down",
+        "scope": [
+            "http-security-post"
+        ],
+        "uncaught": false,
+        "x": 150,
+        "y": 150,
+        "wires": [
+            [
+                "fn-security-queue"
+            ]
+        ]
+    },
+    {
+        "id": "fn-security-queue",
+        "type": "function",
+        "z": "tab-security",
+        "name": "Queue Failed Security",
+        "func": "msg.payload = JSON.stringify({\n    queued_at: new Date().toISOString(),\n    flow: 'security',\n    error: msg.error && msg.error.message,\n    payload: msg.payload\n}) + '\\n';\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 390,
+        "y": 150,
+        "wires": [
+            [
+                "file-failed-queue"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt-environment-in",
+        "type": "mqtt in",
+        "z": "tab-environment",
+        "name": "city/+/environment",
+        "topic": "city/+/environment",
+        "qos": "1",
+        "datatype": "json",
+        "broker": "mqtt-broker-city",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 80,
+        "wires": [
+            [
+                "fn-environment-transform"
+            ]
+        ]
+    },
+    {
+        "id": "fn-environment-transform",
+        "type": "function",
+        "z": "tab-environment",
+        "name": "Transform Environment Payload",
+        "func": "const [, zone] = msg.topic.split('/');\nconst payload = typeof msg.payload === 'object' ? msg.payload : JSON.parse(msg.payload);\nmsg.payload = {\n    zone,\n    temperature: Number(payload.temperature),\n    humidity: Number(payload.humidity),\n    visibility: Number(payload.visibility),\n    timestamp: payload.timestamp,\n    event_type: payload.event_type || null,\n    test_run_id: payload.test_run_id || null,\n    source_topic: msg.topic\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 80,
+        "wires": [
+            [
+                "http-environment-post"
+            ]
+        ]
+    },
+    {
+        "id": "http-environment-post",
+        "type": "http request",
+        "z": "tab-environment",
+        "name": "POST /iot/environment",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://api:3000/iot/environment",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": true,
+        "headers": [
+            {
+                "keyType": "str",
+                "keyValue": "Content-Type",
+                "valueType": "str",
+                "valueValue": "application/json"
+            }
+        ],
+        "x": 710,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "catch-environment",
+        "type": "catch",
+        "z": "tab-environment",
+        "name": "Gateway Down",
+        "scope": [
+            "http-environment-post"
+        ],
+        "uncaught": false,
+        "x": 160,
+        "y": 150,
+        "wires": [
+            [
+                "fn-environment-queue"
+            ]
+        ]
+    },
+    {
+        "id": "fn-environment-queue",
+        "type": "function",
+        "z": "tab-environment",
+        "name": "Queue Failed Environment",
+        "func": "msg.payload = JSON.stringify({\n    queued_at: new Date().toISOString(),\n    flow: 'environment',\n    error: msg.error && msg.error.message,\n    payload: msg.payload\n}) + '\\n';\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 150,
+        "wires": [
+            [
+                "file-failed-queue"
+            ]
+        ]
+    }
+]

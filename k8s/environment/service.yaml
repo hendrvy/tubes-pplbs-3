@@ -1,0 +1,6 @@
+metadata:
+  name: environment-service
+
+ports:
+  - port: 8002
+    targetPort: 8002

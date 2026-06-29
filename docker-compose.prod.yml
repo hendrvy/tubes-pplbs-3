@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+
+  mysql:
+    extends:
+      file: docker-compose.yml
+      service: mysql
+
+  rabbitmq:
+    extends:
+      file: docker-compose.yml
+      service: rabbitmq
+
+  mosquitto:
+    extends:
+      file: docker-compose.yml
+      service: mosquitto
+
+  node-red:
+    extends:
+      file: docker-compose.yml
+      service: node-red
+
+  express-gateway:
+    extends:
+      file: docker-compose.yml
+      service: express-gateway
+
+    restart: always
+
+  oauth-server:
+    extends:
+      file: docker-compose.yml
+      service: oauth-server
+
+    restart: always
+
+  php-citizen:
+    extends:
+      file: docker-compose.yml
+      service: php-citizen
+
+    restart: always
+
+  php-traffic:
+    extends:
+      file: docker-compose.yml
+      service: php-traffic
+
+    restart: always
+
+  python-ml:
+    extends:
+      file: docker-compose.yml
+      service: python-ml
+
+    restart: always
+
+  prometheus:
+    extends:
+      file: docker-compose.yml
+      service: prometheus
+
+  grafana:
+    extends:
+      file: docker-compose.yml
+      service: grafana

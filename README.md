@@ -1,170 +1,453 @@
 # Smart Crowd Control Platform
 
-Sistem manajemen kerumunan cerdas berbasis microservice untuk keamanan publik.
-Dibangun sebagai proyek akhir mata kuliah **Pembangunan Perangkat Lunak Orientasi Berbasis Service**.
+Sistem **Smart Crowd Control Platform** merupakan aplikasi berbasis **Microservices Architecture** yang dikembangkan sebagai proyek akhir mata kuliah **Pembangunan Perangkat Lunak Berorientasi Service (PPLBS)**.
+
+Platform ini bertujuan membantu pemerintah atau pengelola kawasan dalam memonitor tingkat keramaian suatu lokasi secara **real-time**, melakukan **prediksi kepadatan**, **deteksi anomali**, serta mendukung proses penanganan insiden secara cepat melalui integrasi IoT, Machine Learning, dan API Gateway.
 
 ---
 
-## Arsitektur
+# Fitur Utama
+
+- API Gateway sebagai Single Entry Point
+- OAuth 2.0 Authentication & JWT
+- Crowd Monitoring Service
+- Incident Management Service
+- Machine Learning Prediction
+- MQTT IoT Integration
+- Node-RED Automation
+- RabbitMQ Message Broker
+- MySQL Database
+- Docker Compose Deployment
+- Prometheus Monitoring
+- Grafana Dashboard
+
+---
+
+# Arsitektur Sistem
 
 ```
-IoT Simulator → MQTT Broker → Node-RED → API Gateway (port 3000)
-                                               │
-                    ┌──────────────────────────┼──────────────────────┐
-                    ▼                          ▼                      ▼
-             Crowd Service             Incident Service         Python ML
-              (PHP, 8000)              (PHP, 8001)           (FastAPI, 5000)
-                    │                          │
-                    └──────────── RabbitMQ ────┘
-                                      │
-                              Python ML Consumer
-```
+                        +----------------+
+                        |     Client     |
+                        +-------+--------+
+                                |
+                                |
+                        Express Gateway
+                           Port 3000
+                                |
+      -------------------------------------------------------
+      |                |                 |                  |
+      |                |                 |                  |
+ OAuth Server     Crowd Service    Incident Service    ML Service
+   Port 3002        (PHP)              (PHP)          FastAPI 5000
+      |                |                  |
+      |                |                  |
+      ----------- MySQL Database ----------
+                       |
+                  RabbitMQ Broker
+                       |
+                  Future Consumer
+                       |
+                  Monitoring
+                Prometheus + Grafana
 
----
-
-## Prerequisites
-
-| Tool | Versi |
-|------|-------|
-| Node.js | 20+ |
-| PHP | 8.2+ |
-| Python | 3.11+ |
-| Docker & Docker Compose | 24+ |
-| kubectl | 1.28+ |
-
----
-
-## Setup Lokal (Tanpa Docker)
-
-```bash
-# 1. Clone repo
-git clone https://github.com/<username>/smart-crowd-control.git
-cd smart-crowd-control
-
-# 2. Setup API Gateway
-cd express-gateway
-cp .env.example .env
-# Edit .env — isi JWT_SECRET dan URL upstream
-npm install
-npm run dev
-
-# 3. Cek apakah gateway berjalan
-curl http://localhost:3000/health
-```
-
----
-
-## Setup dengan Docker Compose 
-
-```bash
-# 1. Copy dan isi semua .env
-cp .env.example .env
-nano .env
-
-# 2. (Pertama kali) Latih model ML
-cd python-ml-service
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-python train_models.py
-cd ..
-
-# 3. Build dan jalankan semua service
-docker compose up -d --build
-
-# 4. Cek status container
-docker compose ps
-
-# 5. Jalankan migrasi database
-docker exec -i smartcity-mysql-1 mysql -u root -prootpass smartcity < database/schema.sql
-docker exec -i smartcity-mysql-1 mysql -u root -prootpass smartcity < database/seed.sql
-
-# 6. Verifikasi semua service sehat
-curl http://localhost:3000/health
+             MQTT Broker (Mosquitto)
+                       |
+                   Node-RED
+                       |
+                  IoT Sensor Simulator
 ```
 
 ---
 
-## Deploy ke Server
+# Teknologi
 
-```bash
-# Login ke server
-ssh -p 8989 mahasiswa@103.147.92.134
-
-# Clone dan setup
-cd /home/mahasiswa/kelompok3/
-git clone https://github.com/<username>/smart-crowd-control.git .
-cp .env.example .env && nano .env
-
-# Jalankan
-docker compose up -d --build
-```
-
----
-
-## Deploy ke Kubernetes
-
-```bash
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/ -n smartcity
-kubectl get pods -n smartcity -w
-```
+| Teknologi | Kegunaan |
+|-----------|----------|
+| Express.js | API Gateway |
+| PHP 8.2 | Crowd & Incident Service |
+| FastAPI | Machine Learning |
+| MySQL 8 | Database |
+| RabbitMQ | Message Broker |
+| Mosquitto | MQTT Broker |
+| Node-RED | IoT Bridge |
+| Docker Compose | Container Orchestration |
+| Prometheus | Monitoring |
+| Grafana | Dashboard |
 
 ---
 
-## Struktur Folder
+# Struktur Project
 
 ```
 smart-crowd-control/
-├── express-gateway/      # A1 — API Gateway
-├── oauth-server/         # A2 — OAuth 2.0 + JWT
-├── php-citizen/          # A3 — Crowd Service (port 8000)
-├── php-traffic/          # A3 — Incident Service (port 8001)
-├── php-environment/      # A3 — Environment Service (port 8002)
-├── python-ml-service/    # A4 — ML FastAPI (port 5000)
-├── iot/                  # A5 — MQTT + Node-RED + Simulator
-├── database/             # schema.sql + seed.sql
-├── k8s/                  # A6 — Kubernetes manifests
-├── monitoring/           # A6 — Prometheus + Grafana
-├── docker-compose.yml    # A6
+
+├── express-gateway/
+│
+├── oauth-server/
+│
+├── php-citizen/
+│
+├── php-traffic/
+│
+├── python-ml-service/
+│
+├── smartcity-iot-layer/
+│   ├── node-red/
+│   └── simulator/
+│
+├── docker/
+│   ├── mosquitto/
+│   └── mysql/
+│
+├── database/
+│   ├── schema.sql
+│   └── seed.sql
+│
+├── monitoring/
+│
+├── k8s/
+│
+├── docker-compose.yml
+│
 └── README.md
 ```
 
 ---
 
-## API Endpoints
+# Prasyarat
 
-### Public
-| Method | Endpoint | Deskripsi |
-|--------|----------|-----------|
-| GET | `/health` | Status semua service |
-| GET | `/metrics` | Prometheus metrics |
-| POST | `/oauth/token` | Issue access token |
+Sebelum menjalankan sistem pastikan telah menginstall:
 
-### Protected (Bearer JWT required)
-| Method | Endpoint | Service |
-|--------|----------|---------|
-| GET/POST | `/api/crowd/*` | Crowd Service |
-| GET/POST | `/api/incidents/*` | Incident Service |
-| GET/POST | `/api/environment/*` | Environment Service |
-| POST | `/predict/crowd` | Python ML |
-| POST | `/predict/risk` | Python ML |
-| POST | `/detect/anomaly` | Python ML |
-
-### IoT (dari Node-RED)
-| Method | Endpoint | Deskripsi |
-|--------|----------|-----------|
-| POST | `/iot/crowd` | Data sensor kerumunan masuk |
-| POST | `/iot/security` | Data sensor keamanan masuk |
+- Docker Desktop
+- Docker Compose
+- Git
 
 ---
 
-## Tim
+# Menjalankan Sistem
 
-| Anggota | Tugas |
-|---------|-------|
-| Hendry | API Gateway, Arsitektur, Postman Collection |
-| Rafi | OAuth 2.0, JWT, Auth Server |
-| Oman | PHP MVC Services (Crowd + Incident) |
-| Natan | Python ML Service (3 model) |
-| Seli | IoT Layer (MQTT + Node-RED + RabbitMQ) |
-| Sean | Docker, Kubernetes, Monitoring |
+Clone repository
+
+```bash
+git clone <repository-url>
+cd smart-crowd-control
+```
+
+Build seluruh service
+
+```bash
+docker compose up -d --build
+```
+
+Melihat status container
+
+```bash
+docker compose ps
+```
+
+Apabila seluruh service berjalan dengan benar maka akan muncul status:
+
+```
+healthy
+```
+
+---
+
+# Database
+
+Import database
+
+```bash
+docker exec -i smartcity-mysql mysql -uroot -pPASSWORD < database/schema.sql
+```
+
+Import dummy data
+
+```bash
+docker exec -i smartcity-mysql mysql -uroot -pPASSWORD < database/seed.sql
+```
+
+Sesuaikan password dengan file `.env`.
+
+---
+
+# Daftar Service
+
+| Service | Port |
+|----------|------|
+| API Gateway | 3000 |
+| OAuth Server | 3002 |
+| Python ML | 5000 |
+| Grafana | 3001 |
+| Prometheus | 9090 |
+| Node-RED | 1880 |
+| RabbitMQ | 15673 |
+| MQTT | 1883 |
+| MySQL | 3307 |
+
+---
+
+# Endpoint OAuth
+
+## Login
+
+```
+POST /oauth/login
+```
+
+## Client Credentials
+
+```
+POST /oauth/client
+```
+
+## Refresh Token
+
+```
+POST /oauth/refresh
+```
+
+## Introspect Token
+
+```
+POST /oauth/introspect
+```
+
+## Revoke Token
+
+```
+POST /oauth/revoke
+```
+
+---
+
+# Endpoint Gateway
+
+## Health Check
+
+```
+GET /health
+```
+
+## Metrics
+
+```
+GET /metrics
+```
+
+---
+
+# Crowd Service
+
+```
+POST /api/crowd/readings
+
+GET /api/crowd/current
+
+POST /api/reports
+
+GET /api/reports
+```
+
+---
+
+# Incident Service
+
+```
+POST /api/incidents
+
+GET /api/incidents
+
+PATCH /api/incidents/{id}/resolve
+
+GET /api/zones
+```
+
+---
+
+# Machine Learning
+
+```
+POST /predict/crowd
+
+POST /predict/risk
+
+POST /predict/batch
+
+POST /detect/anomaly
+
+GET /model/feature-importance
+
+GET /predict/health
+```
+
+---
+
+# IoT Endpoint
+
+```
+POST /iot/crowd
+
+POST /iot/security
+```
+
+Node-RED akan menerima data dari MQTT Broker kemudian mengirimkan request HTTP menuju API Gateway melalui endpoint di atas.
+
+---
+
+# Monitoring
+
+## Prometheus
+
+```
+http://localhost:9090
+```
+
+## Grafana
+
+```
+http://localhost:3001
+```
+
+## Node-RED
+
+```
+http://localhost:1880
+```
+
+## RabbitMQ Management
+
+```
+http://localhost:15673
+```
+
+---
+
+# Cara Pengujian
+
+## 1. Login
+
+```
+POST /oauth/login
+```
+
+Mendapatkan Access Token.
+
+---
+
+## 2. Akses Endpoint Protected
+
+```
+GET /api/crowd/current
+```
+
+Tambahkan Authorization
+
+```
+Bearer <access_token>
+```
+
+---
+
+## 3. Rate Limiter
+
+Lakukan request berulang.
+
+Gateway akan mengembalikan
+
+```
+429 Too Many Requests
+```
+
+---
+
+## 4. Machine Learning
+
+```
+POST /predict/crowd
+```
+
+Model akan menghasilkan prediksi kepadatan.
+
+---
+
+## 5. IoT
+
+Publish data MQTT
+
+```
+city/zone1/crowd
+```
+
+Node-RED akan meneruskan data menuju API Gateway.
+
+---
+
+# Docker Compose
+
+Menjalankan seluruh service
+
+```bash
+docker compose up -d --build
+```
+
+Menghentikan seluruh service
+
+```bash
+docker compose down
+```
+
+Melihat log
+
+```bash
+docker compose logs -f
+```
+
+---
+
+# Kubernetes
+
+Deploy seluruh service
+
+```bash
+kubectl apply -f k8s/
+```
+
+Melihat pod
+
+```bash
+kubectl get pods
+```
+
+---
+
+# Monitoring Dashboard
+
+Grafana digunakan untuk memonitor:
+
+- Gateway Request
+- HTTP Response Time
+- API Traffic
+- Machine Learning Request
+- Service Availability
+
+Prometheus bertugas mengumpulkan seluruh metrics dari setiap service.
+
+---
+
+# Tim Pengembang
+
+| Modul                     | Penanggung Jawab|
+|--------------------------------------|------|
+| A1 - API Gateway                     |Hendry|
+| A2 - OAuth Server                    | Rafi |
+| A3 - PHP Services                    | Oman |
+| A4 - Machine Learning                | Natan|
+| A5 - IoT Layer                       | Seli |
+| A6 - Docker, Kubernetes & Monitoring | Sean |
+
+---
+
+# Lisensi
+
+Project ini dikembangkan sebagai tugas mata kuliah **Pembangunan Perangkat Lunak Berorientasi Service (PPLBS)** Universitas Pembangunan Nasional Veteran Jakarta.

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smartcity-config
+  namespace: smartcity
+data:
+  DB_HOST: "mysql-service"
+  DB_USER: "root"
+  DB_NAME: "smartcity"
+  RABBITMQ_HOST: "rabbitmq-service"
+  RABBITMQ_USER: "admin"
+  ML_SERVICE_URL: "http://python-ml-service:5000"
+  GATEWAY_PORT: "3000"
+  OAUTH_PORT: "3002"
+  FEATURE_FLAG_ANOMALY_DETECTION: "true"
+  FEATURE_FLAG_ML_PREDICTION: "true"
+  FEATURE_FLAG_NOTIFICATION: "true"

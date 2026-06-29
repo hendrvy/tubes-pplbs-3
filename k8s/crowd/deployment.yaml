@@ -1,0 +1,5 @@
+name: crowd
+
+image: smart-crowd-service:latest
+
+containerPort: 8000

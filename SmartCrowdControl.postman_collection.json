@@ -17,7 +17,7 @@
   "item": [
 
     {
-      "name": "🔐 AUTH — OAuth 2.0",
+      "name": "AUTH — OAuth 2.0",
       "item": [
         {
           "name": "Login Citizen (Password Grant)",
@@ -48,10 +48,10 @@
               "mode": "urlencoded",
               "urlencoded": [
                 { "key": "grant_type", "value": "password" },
-                { "key": "username",   "value": "officer@smartcity.id" },
+                { "key": "username",   "value": "Hendry" },
                 { "key": "password",   "value": "password123" },
-                { "key": "client_id",  "value": "citizen_app" },
-                { "key": "client_secret", "value": "citizen_secret" }
+                { "key": "client_id",  "value": "smart_crowd_app" },
+                { "key": "client_secret", "value": "secret_key_123" }
               ]
             }
           }
@@ -79,8 +79,8 @@
               "mode": "urlencoded",
               "urlencoded": [
                 { "key": "grant_type",    "value": "client_credentials" },
-                { "key": "client_id",     "value": "iot_device" },
-                { "key": "client_secret", "value": "iot_secret" }
+                { "key": "client_id",     "value": "backend_service" },
+                { "key": "client_secret", "value": "service_secret" }
               ]
             }
           }
@@ -112,8 +112,8 @@
               "urlencoded": [
                 { "key": "grant_type",    "value": "refresh_token" },
                 { "key": "refresh_token", "value": "{{refreshToken}}" },
-                { "key": "client_id",     "value": "citizen_app" },
-                { "key": "client_secret", "value": "citizen_secret" }
+                { "key": "client_id",     "value": "smart_crowd_app" },
+                { "key": "client_secret", "value": "secret_key_123" }
               ]
             }
           }
@@ -141,8 +141,8 @@
               "mode": "urlencoded",
               "urlencoded": [
                 { "key": "token",         "value": "{{token}}" },
-                { "key": "client_id",     "value": "citizen_app" },
-                { "key": "client_secret", "value": "citizen_secret" }
+                { "key": "client_id",     "value": "smart_crowd_app" },
+                { "key": "client_secret", "value": "secret_key_123" }
               ]
             }
           }
@@ -168,8 +168,8 @@
               "mode": "urlencoded",
               "urlencoded": [
                 { "key": "token",         "value": "{{token}}" },
-                { "key": "client_id",     "value": "citizen_app" },
-                { "key": "client_secret", "value": "citizen_secret" }
+                { "key": "client_id",     "value": "smart_crowd_app" },
+                { "key": "client_secret", "value": "secret_key_123" }
               ]
             }
           }

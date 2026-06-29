@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: smart-crowd
+
+  labels:
+    app: smart-crowd
+    environment: development

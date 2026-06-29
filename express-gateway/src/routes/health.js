@@ -1,44 +1,73 @@
 const express = require('express');
 const axios = require('axios');
+
 const router = express.Router();
 
 const SERVICES = [
-  { name: 'oauth-server',       url: process.env.OAUTH_SERVER_URL    + '/health' },
-  { name: 'crowd-service',      url: process.env.CROWD_SERVICE_URL   + '/health' },
-  { name: 'incident-service',   url: process.env.INCIDENT_SERVICE_URL + '/health' },
-  { name: 'env-service',        url: process.env.ENV_SERVICE_URL     + '/health' },
-  { name: 'python-ml',          url: process.env.PYTHON_ML_URL       + '/health' },
+  {
+    name: 'oauth-server',
+    url: (process.env.OAUTH_SERVER_URL || 'http://oauth-server:3002') + '/oauth/token',
+    method: 'post',
+    data: {},
+    validateStatus: (status) => status < 500,
+  },
+  {
+    name: 'php-citizen',
+    url: (process.env.CITIZEN_SERVICE_URL || 'http://php-citizen') + '/health.php',
+    method: 'get',
+    validateStatus: (status) => status < 500,
+  },
+  {
+    name: 'php-traffic',
+    url: (process.env.TRAFFIC_SERVICE_URL || 'http://php-traffic') + '/health.php',
+    method: 'get',
+    validateStatus: (status) => status < 500,
+  },
+  {
+    name: 'python-ml',
+    url: (process.env.PYTHON_ML_URL || 'http://python-ml:5000') + '/health',
+    method: 'get',
+    validateStatus: (status) => status < 500,
+  },
 ];
 
-async function checkService(svc) {
+async function checkService(service) {
   const start = Date.now();
+
   try {
-    const res = await axios.get(svc.url, { timeout: 3000 });
+    const response = await axios({
+      method: service.method,
+      url: service.url,
+      data: service.data,
+      timeout: 3000,
+      validateStatus: service.validateStatus,
+    });
+
     return {
-      name: svc.name,
+      name: service.name,
       status: 'up',
+      http_status: response.status,
       latency_ms: Date.now() - start,
-      detail: res.data,
     };
-  } catch {
+  } catch (err) {
     return {
-      name: svc.name,
+      name: service.name,
       status: 'down',
       latency_ms: Date.now() - start,
-      detail: null,
+      error: err.code || err.message,
     };
   }
 }
 
-// GET /health — aggregasi status semua upstream service
 router.get('/', async (req, res) => {
-  const results = await Promise.all(SERVICES.map(checkService));
+  const results = await Promise.all(
+    SERVICES.map(checkService)
+  );
 
-  const allUp = results.every(r => r.status === 'up');
-  const overallStatus = allUp ? 'healthy' : 'degraded';
+  const allUp = results.every(service => service.status === 'up');
 
   res.status(allUp ? 200 : 207).json({
-    status: overallStatus,
+    status: allUp ? 'healthy' : 'degraded',
     code: allUp ? 200 : 207,
     gateway: 'up',
     timestamp: new Date().toISOString(),

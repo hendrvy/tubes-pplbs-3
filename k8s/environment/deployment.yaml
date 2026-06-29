@@ -1,0 +1,5 @@
+name: environment
+
+image: smart-environment-service:latest
+
+containerPort: 8002

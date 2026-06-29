@@ -1,0 +1,17 @@
+services:
+  python-ml:
+    build:
+      context: .
+    container_name: smartcrowd-python-ml
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+

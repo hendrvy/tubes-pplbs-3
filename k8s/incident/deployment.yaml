@@ -1,0 +1,5 @@
+name: incident
+
+image: smart-incident-service:latest
+
+containerPort: 8001

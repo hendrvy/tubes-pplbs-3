@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+
+  mysql:
+    extends:
+      file: docker-compose.yml
+      service: mysql
+
+  rabbitmq:
+    extends:
+      file: docker-compose.yml
+      service: rabbitmq
+
+  mosquitto:
+    extends:
+      file: docker-compose.yml
+      service: mosquitto
+
+  node-red:
+    extends:
+      file: docker-compose.yml
+      service: node-red
+
+  express-gateway:
+    extends:
+      file: docker-compose.yml
+      service: express-gateway
+
+    environment:
+      NODE_ENV: development
+
+    volumes:
+      - ./express-gateway:/app
+
+  oauth-server:
+    extends:
+      file: docker-compose.yml
+      service: oauth-server
+
+    volumes:
+      - ./oauth-server:/app
+
+  php-citizen:
+    extends:
+      file: docker-compose.yml
+      service: php-citizen
+
+    volumes:
+      - ./php-citizen:/var/www/html
+
+  php-traffic:
+    extends:
+      file: docker-compose.yml
+      service: php-traffic
+
+    volumes:
+      - ./php-traffic:/var/www/html
+
+  python-ml:
+    extends:
+      file: docker-compose.yml
+      service: python-ml
+
+    volumes:
+      - ./python-ml-service:/app
